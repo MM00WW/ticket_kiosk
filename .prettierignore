@@ -1,0 +1,8 @@
+node_modules
+.next
+src/generated
+data
+package-lock.json
+next-env.d.ts
+*.code-workspace
+prisma/migrations

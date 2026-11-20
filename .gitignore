@@ -1,0 +1,7 @@
+node_modules/
+.next/
+.env
+data/*.db*
+src/generated/
+*.tsbuildinfo
+test-results/
