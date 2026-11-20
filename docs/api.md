@@ -23,4 +23,4 @@
 
 API 校验分类代码与父子归属，重复组合会去重，最多保存全部 33 个不同小分类。显式空数组、非法代码、错误归属和格式错误的 JSON 返回 400。为兼容旧客户端，空请求体或 `{}` 默认保存 `other / unsure`；历史记录的空列表仍保留为空。创建结果及队列快照均返回类型明确的 `issues` 数组，`ticket:created` 事件 payload 同时记录需求。需求和号码在同一事务中写入。
 
-实时事件：`queue:updated`、`ticket:created`、`ticket:called`、`ticket:recalled`、`ticket:completed`、`window:updated`，另有 started/no-show 审计事件。事件携带唯一 ID、时间、相关 ticket/window 及 payload；类型见 `src/types/realtime.ts`。
+实时事件：`queue:updated`、`ticket:created`、`ticket:called`、`ticket:recalled`、`ticket:completed`、`window:updated`，另有 started/no-show 审计事件。事件携带唯一 ID、时间、相关 ticket/window 及 payload；类型见 `src/types/queue.ts`。

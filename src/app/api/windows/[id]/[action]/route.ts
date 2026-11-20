@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { api } from "@/server/api";
-import { actionSchema, windowAction } from "@/server/services/windowService";
+import { actionSchema, windowAction } from "@/server/queueService";
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string; action: string }> },

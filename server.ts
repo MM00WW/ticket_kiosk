@@ -6,7 +6,7 @@ import { setSocketServer } from "./src/server/socketServer";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
-} from "./src/types/realtime";
+} from "./src/types/queue";
 const dev = !process.argv.includes("--production");
 Object.assign(process.env, { NODE_ENV: dev ? "development" : "production" });
 const port = Number(process.env.PORT ?? 3000);

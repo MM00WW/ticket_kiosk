@@ -3,7 +3,7 @@ import type { QueueEvent } from "../generated/prisma/client";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
-} from "../types/realtime";
+} from "../types/queue";
 export type QueueSocketServer = Server<
   ClientToServerEvents,
   ServerToClientEvents

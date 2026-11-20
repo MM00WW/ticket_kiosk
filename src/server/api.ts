@@ -1,5 +1,14 @@
 import { ZodError } from "zod";
-import { AppError } from "./errors";
+export class AppError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 export async function api(work: () => Promise<unknown>, status = 200) {
   try {
     return Response.json({ data: await work() }, { status });

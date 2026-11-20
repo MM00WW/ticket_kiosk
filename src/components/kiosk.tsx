@@ -15,8 +15,8 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { IssueBadges } from "../shared/issue-badges";
+import { Button } from "./ui/button";
+import { IssueBadges } from "./shared/issue-badges";
 import { messages, type Language } from "@/i18n";
 import { issueMessages } from "@/i18n/issues";
 import {

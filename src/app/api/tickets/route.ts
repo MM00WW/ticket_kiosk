@@ -1,6 +1,5 @@
-import { api } from "@/server/api";
-import { createTicket } from "@/server/services/ticketService";
-import { AppError } from "@/server/errors";
+import { api, AppError } from "@/server/api";
+import { createTicket } from "@/server/queueService";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   return api(async () => {

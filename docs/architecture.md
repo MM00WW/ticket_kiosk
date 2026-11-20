@@ -4,18 +4,15 @@
 src/
   app/                 页面与薄层 Route Handlers
     api/               tickets、queue、windows、窗口操作
-  components/          kiosk、operator、display、admin；shared、ui 共用组件
+  components/          kiosk.tsx、operator.tsx、display.tsx、admin.tsx；shared、ui 共用组件
   hooks/useQueue.ts    Socket.IO、状态重取、事件去重
-  server/services/
-    ticketService.ts   日期、取号、权威快照
-    allocationService.ts  手动/自动统一 FIFO 原子分配
-    windowService.ts   窗口动作、模式与状态机
-    serviceSession.ts  开始、完成、未到和重复叫号
-    eventService.ts    持久化操作事件
-    transaction.ts    写事务、冲突重试、提交后广播
-  server/              Prisma 单例、API 错误、Socket 服务
+  server/
+    queueService.ts      取号、FIFO 分配、窗口状态、服务流程、事务及事件
+    db.ts                Prisma 数据库连接
+    api.ts               API 返回格式与错误处理
+    socketServer.ts      提交后的实时广播
   lib/                 分类校验与通用工具
-  types/               JSON DTO、双向 Socket.IO 事件类型
+  types/               queue.ts：明确列出的 JSON 数据结构与 Socket.IO 事件类型
   i18n/                界面词典、三语语音模板
 prisma/
   schema.prisma
@@ -28,7 +25,7 @@ server.ts              Next.js + Socket.IO 自定义服务器
 start-server.bat       Windows 启动脚本
 ```
 
-写操作在 SQLite 事务开始时先写入配置表以取得数据库写锁，再查询与更新状态。号码有复合唯一约束；分配对 WAITING 票据和预期状态/空闲窗口执行条件更新，窗口 `currentTicketId` 有唯一约束。冲突有限重试，事务整体回滚，不使用进程内锁保证一致性。所有分配只通过 allocationService。
+写操作在 SQLite 事务开始时先写入配置表以取得数据库写锁，再查询与更新状态。号码有复合唯一约束；分配对 WAITING 票据和预期状态/空闲窗口执行条件更新，窗口 `currentTicketId` 有唯一约束。冲突有限重试，事务整体回滚，不使用进程内锁保证一致性。所有分配只通过 queueService.ts 内的 allocate 函数。
 
 事件与业务状态在同一事务中保存，提交成功后才向 Socket.IO 广播。SQLite 是最终状态来源；客户端收到通知后重新 GET 快照，重连后同样重新同步。请求版本号防止较旧 HTTP 响应覆盖较新状态。广播屏按事件 ID 去重。每 15 秒轮询作为补充恢复机制。
 
@@ -38,7 +35,17 @@ start-server.bat       Windows 启动脚本
 
 ## 维护约定
 
-- 路由保留在 app，业务写操作进入 server/services。
+- 路由保留在 app，业务写操作进入 server/queueService.ts。
 - components 和 hooks 不在运行时引入 server；共享 DTO 使用 import type。
 - generated、.next、node_modules 和 tsbuildinfo 是生成产物；data 是持久化数据。
 - 工具配置保留根目录，使用 npm ci 与 package-lock.json 可复现安装。
+
+## 建议阅读顺序
+
+1. 从 src/components/kiosk.tsx 的 submit 函数开始，了解取号提交。
+2. 查看 src/app/api/tickets/route.ts，了解请求如何进入后端。
+3. 阅读 src/server/queueService.ts，按编号了解取号、分配、窗口操作、服务流程、事务及事件。
+4. 阅读 src/hooks/useQueue.ts，了解通知触发刷新、断线重连和轮询。
+5. 对照 src/types/queue.ts 和 prisma/schema.prisma，了解浏览器数据与数据库字段。
+
+四种业务界面分别保留一个文件。Next.js 页面和 API 的目录决定访问地址，因此保留其目录结构。数据库与实时通知独立于业务文件，便于分别理解和维护。

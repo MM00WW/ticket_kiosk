@@ -6,11 +6,11 @@ import { Button } from "./ui/button";
 import { useQueue } from "@/hooks/useQueue";
 import { messages, speechTemplates, type Language } from "@/i18n";
 import type { QueueEvent } from "@/types/queue";
-import { KioskFlow } from "./kiosk/kiosk-flow";
+import { KioskFlow } from "./kiosk";
 
-import { OperatorView } from "./operator/operator-view";
-import { DisplayView } from "./display/display-view";
-import { AdminView } from "./admin/admin-view";
+import { OperatorView } from "./operator";
+import { DisplayView } from "./display";
+import { AdminView } from "./admin";
 
 export function QueueApp({
   page,

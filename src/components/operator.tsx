@@ -5,7 +5,7 @@ import Link from "next/link";
 import { BellRing, Check, Monitor, Users, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { request } from "@/hooks/useQueue";
-import type { WindowAction } from "@/server/services/windowService";
+import type { WindowAction } from "@/server/queueService";
 import { TicketList } from "@/components/shared/ticket-list";
 import { elapsed, time, Status } from "@/components/shared/queue-format";
 import { IssueBadges } from "@/components/shared/issue-badges";

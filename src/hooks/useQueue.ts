@@ -1,11 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-import type { Snapshot, QueueEvent } from "@/types/queue";
 import type {
+  Snapshot,
+  QueueEvent,
   ServerToClientEvents,
   ClientToServerEvents,
-} from "@/types/realtime";
+} from "@/types/queue";
 export async function request<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(path, {
     method: body === undefined ? "GET" : "POST",
