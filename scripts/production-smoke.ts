@@ -1,5 +1,4 @@
 import { spawn, execFileSync, type ChildProcess } from "node:child_process";
-import { mkdirSync, openSync, closeSync } from "node:fs";
 import assert from "node:assert/strict";
 import { io } from "socket.io-client";
 import { defaultIssues, type IssueSelection } from "../src/lib/issueCatalog";
@@ -15,27 +14,18 @@ const env = {
   DATABASE_URL: "file:./data/production-test.db",
   PORT: String(port),
 };
-mkdirSync("data", { recursive: true });
-closeSync(openSync("data/production-test.db", "a"));
-execFileSync(
-  process.execPath,
-  ["node_modules/prisma/build/index.js", "migrate", "deploy"],
-  { env, stdio: "pipe" },
-);
-// 所有集成测试只使用独立数据库，不修改演示或正式数据。
+// 独立测试数据库，不清理日常使用的 queue.db。
 process.env.DATABASE_URL = env.DATABASE_URL;
 const { db } = await import("../src/server/db");
-await db.queueEvent.deleteMany();
-await db.ticket.deleteMany();
-await db.serviceWindow.deleteMany();
+db.exec(
+  "DELETE FROM QueueEvent; DELETE FROM Ticket; DELETE FROM ServiceWindow;",
+);
 for (let id = 1; id <= 4; id++)
-  await db.serviceWindow.create({ data: { id, name: `Window ${id}` } });
-await db.systemSetting.upsert({
-  where: { key: "speechLanguage" },
-  update: {},
-  create: { key: "speechLanguage", value: "en" },
-});
-await db.$disconnect();
+  db.prepare("INSERT INTO ServiceWindow(id, name) VALUES (?, ?)").run(
+    id,
+    `Window ${id}`,
+  );
+db.close();
 let server: ChildProcess | undefined;
 let output = "";
 async function start() {
@@ -227,8 +217,53 @@ try {
       .issues,
     selectedIssues,
   );
+  // 同时取号、两个窗口同时叫号：序号连续，分配不同号码。
+  const issued = await Promise.all(
+    Array.from({ length: 12 }, () => post("/api/tickets")),
+  );
+  assert.ok(issued.every((result) => result.status === 201));
+  assert.deepEqual(
+    issued.map((result) => result.data.sequence).sort((a, b) => a - b),
+    Array.from({ length: 12 }, (_, index) => index + 5),
+  );
+  await post("/api/windows/3/online");
+  await post("/api/windows/4/online");
+  const assigned = await Promise.all([
+    post("/api/windows/3/call-next"),
+    post("/api/windows/4/call-next"),
+  ]);
+  assert.ok(assigned.every((result) => result.status === 200));
+  assert.notEqual(
+    assigned[0].data.currentTicketId,
+    assigned[1].data.currentTicketId,
+  );
+  state = await snapshot();
+  assert.deepEqual(
+    state.tickets
+      .filter(
+        (ticket: { windowId: number }) =>
+          ticket.windowId === 3 || ticket.windowId === 4,
+      )
+      .map((ticket: { number: string }) => ticket.number)
+      .sort(),
+    ["A004", "A005"],
+  );
+  // 重复操作只成功一次，失败操作不会多写事件。
+  const before = state.events.length;
+  const starts = await Promise.all([
+    post("/api/windows/3/start"),
+    post("/api/windows/3/start"),
+  ]);
+  assert.deepEqual(starts.map((result) => result.status).sort(), [200, 409]);
+  assert.equal((await snapshot()).events.length, before + 2);
+  assert.equal((await post("/api/windows/3/complete")).status, 200);
+  assert.equal((await post("/api/windows/4/no-show")).status, 200);
+  assert.equal((await post("/api/windows/4/pause")).status, 200);
+  assert.equal((await post("/api/windows/4/resume")).status, 200);
+  assert.equal((await fetch(`${base}/operator/9`)).status, 404);
+  assert.equal((await fetch(`${base}/api/missing`)).status, 404);
   console.log(
-    "PASS: 7 production pages, acceptance flow, issue persistence + validation + legacy API, typed socket broadcasts, recall event IDs, automatic reconnect + issue recovery, persistence after restart.",
+    "PASS: 7 pages, manual/auto flow, input validation, Socket.IO + reconnect, restart persistence, 12 concurrent tickets, concurrent FIFO allocation, duplicate-action rollback, no-show and pause/resume.",
   );
 } finally {
   socket.disconnect();

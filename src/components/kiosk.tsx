@@ -1,4 +1,3 @@
-"use client";
 import { useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -92,74 +91,61 @@ export function KioskFlow({
   if (issued)
     return (
       <section
-        className="panel mx-auto max-w-3xl text-center !py-12"
+        className="panel ticket-success"
         aria-labelledby="ticket-success"
       >
-        <span className="pill text-emerald-600">
+        <span className="pill success-label">
           <Check size={16} />
           {t.confirmed}
         </span>
-        <h1 id="ticket-success" className="mt-6 text-3xl font-bold">
+        <h1 id="ticket-success" className="success-title">
           {common.success}
         </h1>
-        <div className="number my-7 text-8xl font-bold text-blue-500 sm:text-9xl">
-          {issued.number}
-        </div>
+        <div className="number success-number">{issued.number}</div>
         <p className="muted">
           {new Date(issued.createdAt).toLocaleTimeString(
             language === "zh" ? "zh-CN" : language === "de" ? "de-DE" : "en-GB",
           )}{" "}
           · {issued.queueDate}
         </p>
-        <div className="my-8 rounded-2xl bg-[var(--bg)] p-5 text-left">
-          <h2 className="mb-4 font-semibold">{t.requests}</h2>
+        <div className="success-requests">
+          <h2 className="requests-title">{t.requests}</h2>
           <IssueBadges issues={issued.issues} language={language} />
         </div>
-        <p className="muted mb-8">{t.watch}</p>
-        <Button
-          size="lg"
-          className="h-auto min-h-20 whitespace-normal py-5"
-          onClick={reset}
-        >
+        <p className="success-hint">{t.watch}</p>
+        <Button size="lg" className="return-button" onClick={reset}>
           {common.return}
-          <ArrowRight className="shrink-0" />
+          <ArrowRight className="fixed-icon" />
         </Button>
       </section>
     );
 
   return (
-    <div className="mx-auto max-w-[1240px]">
-      <div className="mb-7 flex flex-wrap items-center justify-between gap-5">
+    <div className="kiosk">
+      <div className="kiosk-heading">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            {t.choose}
-          </h1>
-          <p className="muted mt-3 max-w-3xl leading-7">{t.intro}</p>
+          <h1 className="kiosk-title">{t.choose}</h1>
+          <p className="kiosk-intro">{t.intro}</p>
         </div>
-        <div className="pill !px-4 !py-3">
-          <Users size={18} className="text-blue-500" />
-          <strong className="text-xl">{waiting}</strong>
+        <div className="pill waiting-count">
+          <Users size={18} className="accent" />
+          <strong className="large-text">{waiting}</strong>
           {common.waiting}
         </div>
       </div>
-      <ol
-        className="muted mb-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
-        aria-label={t.choose}
-      >
+      <ol className="steps" aria-label={t.choose}>
         {[t.categoryStep, t.issueStep, t.confirmStep].map((step, index) => (
           <li
             key={step}
-            className={`flex items-center gap-2 ${index === (activeCategory ? 1 : 0) ? "font-semibold text-blue-500" : ""}`}
+            className={`step ${index === (activeCategory ? 1 : 0) ? "active" : ""}`}
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--soft)]">
-              {index + 1}
-            </span>
+            <span className="step-number">{index + 1}</span>
             {step}
             {index < 2 && <ChevronRight size={15} aria-hidden="true" />}
           </li>
         ))}
       </ol>
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="kiosk-grid">
         <section className="panel" aria-labelledby="issue-heading">
           {activeCategory ? (
             <>
@@ -167,16 +153,16 @@ export function KioskFlow({
                 variant="outline"
                 disabled={busy}
                 onClick={() => setCategory(null)}
-                className="mb-6"
+                className="back-button"
               >
                 <ArrowLeft size={18} />
                 {t.back}
               </Button>
-              <h2 id="issue-heading" className="text-2xl font-bold">
+              <h2 id="issue-heading" className="category-title">
                 {activeCategory.label[language]}
               </h2>
-              <p className="muted mb-6 mt-2">{t.subheading}</p>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <p className="category-intro">{t.subheading}</p>
+              <div className="issue-grid">
                 {activeCategory.children.map((child) => {
                   const issue: IssueSelection = {
                     category: activeCategory.code,
@@ -192,28 +178,26 @@ export function KioskFlow({
                       aria-pressed={checked}
                       disabled={busy}
                       onClick={() => toggleIssue(issue)}
-                      className={`flex min-h-24 items-center gap-4 rounded-2xl border-2 p-5 text-left text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50 ${checked ? "border-blue-500 bg-blue-500/10" : "border-[var(--border)] bg-[var(--panel)] hover:bg-[var(--soft)]"}`}
+                      className={`issue-card ${checked ? "selected" : ""}`}
                     >
-                      <span
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 ${checked ? "border-blue-600 bg-blue-600 text-white" : "border-[var(--border)]"}`}
-                      >
+                      <span className={`checkbox ${checked ? "selected" : ""}`}>
                         {checked && <Check size={18} aria-hidden="true" />}
                       </span>
-                      <span className="min-w-0 break-words">
+                      <span className="wrapping-text">
                         {child.label[language]}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="muted mt-6 text-sm leading-6">{t.additional}</p>
+              <p className="additional-hint">{t.additional}</p>
             </>
           ) : (
             <>
-              <h2 id="issue-heading" className="mb-6 text-xl font-semibold">
+              <h2 id="issue-heading" className="category-heading">
                 {t.categoryStep}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="category-grid">
                 {issueCatalog.map((item) => {
                   const Icon = icons[item.icon];
                   const count = selected.filter(
@@ -225,22 +209,22 @@ export function KioskFlow({
                       type="button"
                       disabled={busy}
                       onClick={() => setCategory(item.code)}
-                      className="flex min-h-32 items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--panel)] p-5 text-left hover:border-blue-500 hover:bg-blue-500/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
+                      className="category-card"
                     >
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                      <span className="category-icon">
                         <Icon size={26} aria-hidden="true" />
                       </span>
-                      <span className="min-w-0 flex-1 break-words text-lg font-semibold">
+                      <span className="category-name">
                         {item.label[language]}
                         {count > 0 && (
-                          <span className="mt-2 block text-sm font-normal text-blue-500">
+                          <span className="category-count">
                             {count} {t.selectedCount}
                           </span>
                         )}
                       </span>
                       <ChevronRight
                         size={20}
-                        className="shrink-0 text-blue-500"
+                        className="category-arrow"
                         aria-hidden="true"
                       />
                     </button>
@@ -251,11 +235,11 @@ export function KioskFlow({
           )}
         </section>
         <aside
-          className="panel lg:sticky lg:top-6"
+          className="panel selected-panel"
           aria-labelledby="selected-heading"
         >
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 id="selected-heading" className="text-lg font-semibold">
+          <div className="selection-heading">
+            <h2 id="selected-heading" className="selection-title">
               {t.selected}
             </h2>
             <span className="pill" aria-live="polite">
@@ -270,26 +254,23 @@ export function KioskFlow({
               disabled={busy}
             />
           ) : (
-            <p className="muted py-5 text-sm">{t.none}</p>
+            <p className="selection-empty">{t.none}</p>
           )}
           {error && (
-            <p
-              role="alert"
-              className="my-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm"
-            >
+            <p role="alert" className="selection-error">
               {t.failed}
             </p>
           )}
           <Button
             size="lg"
-            className="mt-6 h-auto min-h-20 w-full whitespace-normal px-5 py-5 text-lg"
+            className="confirm-button"
             disabled={busy || !selected.length}
             onClick={() => void submit()}
           >
-            <TicketIcon className="shrink-0" size={22} />
+            <TicketIcon className="fixed-icon" size={22} />
             <span>{busy ? t.submitting : t.confirm}</span>
           </Button>
-          <p className="muted mt-4 text-sm leading-6">{t.hint}</p>
+          <p className="selection-hint">{t.hint}</p>
         </aside>
       </div>
     </div>

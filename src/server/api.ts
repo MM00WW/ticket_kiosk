@@ -9,7 +9,7 @@ export class AppError extends Error {
   }
 }
 
-export async function api(work: () => Promise<unknown>, status = 200) {
+export async function api(work: () => unknown, status = 200) {
   try {
     return Response.json({ data: await work() }, { status });
   } catch (error) {

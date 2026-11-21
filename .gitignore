@@ -5,3 +5,5 @@ data/*.db*
 src/generated/
 *.tsbuildinfo
 test-results/
+
+dist/

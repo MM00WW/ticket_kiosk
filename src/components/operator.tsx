@@ -1,7 +1,5 @@
-"use client";
 import type { Snapshot } from "@/types/queue";
 import { messages, type Language } from "@/i18n";
-import Link from "next/link";
 import { BellRing, Check, Monitor, Users, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { request } from "@/hooks/useQueue";
@@ -64,26 +62,26 @@ export function OperatorView({
   if (!currentWindow) return null;
   return (
     <>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+      <div className="operator-heading">
         <div>
-          <h1 className="text-3xl font-bold">Your service workspace</h1>
-          <p className="muted mt-2">
+          <h1 className="page-title">Your service workspace</h1>
+          <p className="operator-intro">
             Manage your window. Keep the queue moving.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="window-tabs">
           {data.windows.map((w) => (
-            <Link
+            <a
               key={w.id}
               className={`nav-link ${windowId === w.id ? "active" : ""}`}
               href={`/operator/${w.id}`}
             >
               Window {w.id}
-            </Link>
+            </a>
           ))}
         </div>
       </div>
-      <div className="mb-6 grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div className="stats-grid">
         {[
           { label: "Your window", value: `0${windowId}`, icon: Monitor },
           {
@@ -104,50 +102,47 @@ export function OperatorView({
             icon: LayoutDashboard,
           },
         ].map((item) => (
-          <div
-            className="panel flex items-center justify-between"
-            key={item.label}
-          >
+          <div className="panel stat-card" key={item.label}>
             <div>
-              <p className="muted text-xs">{item.label}</p>
-              <p className="mt-3 text-2xl font-bold">{item.value}</p>
+              <p className="caption">{item.label}</p>
+              <p className="operator-stat">{item.value}</p>
             </div>
-            <item.icon className="text-blue-500" size={22} />
+            <item.icon className="accent" size={22} />
           </div>
         ))}
       </div>
       <div className="grid-main">
-        <div className="space-y-6">
+        <div className="service-panels">
           <section className="panel">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Current service</h2>
+            <div className="row-between">
+              <h2 className="semibold">Current service</h2>
               <Status status={currentWindow.status} />
             </div>
-            <div className="py-12 text-center">
+            <div className="current-service">
               <p className="eyebrow">
                 {current ? "CURRENT TICKET" : "READY WHEN YOU ARE"}
               </p>
-              <div className="number my-5 text-8xl font-bold">
+              <div className="number current-number">
                 {current?.number ?? "—"}
               </div>
-              <p className="muted text-sm">
+              <p className="small-note">
                 {current
                   ? `Issued ${time(current.createdAt)} · ${current.queueDate}`
                   : "Go online and call your next visitor."}
               </p>
               {current && (
-                <div className="mx-auto mt-6 max-w-2xl text-left">
-                  <p className="muted mb-3 text-xs font-semibold">
+                <div className="current-requests">
+                  <p className="requests-caption">
                     {issueMessages[language].requests}
                   </p>
                   <IssueBadges issues={current.issues} language={language} />
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 border-t border-[var(--border)] pt-6 text-center">
+            <div className="service-times">
               <div>
-                <p className="muted text-xs">Ticket wait time</p>
-                <p className="mt-2 text-xl font-semibold">
+                <p className="caption">Ticket wait time</p>
+                <p className="time-value">
                   {current
                     ? elapsed(
                         current.createdAt,
@@ -157,16 +152,14 @@ export function OperatorView({
                 </p>
               </div>
               <div>
-                <p className="muted text-xs">Service duration</p>
-                <p className="mt-2 text-xl font-semibold">
-                  {elapsed(current?.startedAt, now)}
-                </p>
+                <p className="caption">Service duration</p>
+                <p className="time-value">{elapsed(current?.startedAt, now)}</p>
               </div>
             </div>
           </section>
           <section className="panel">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-semibold">Window controls</h2>
+            <div className="controls-heading">
+              <h2 className="semibold">Window controls</h2>
               <select
                 aria-label="Allocation mode"
                 value={currentWindow.allocationMode}
@@ -213,25 +206,22 @@ export function OperatorView({
                 </Button>
               ))}
             </div>
-            <p className="muted mt-5 text-xs">
+            <p className="controls-hint">
               Automatic mode requires “Ready to receive” for each new visitor.
             </p>
           </section>
         </div>
         <aside className="panel">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-semibold">{t.queue}</h2>
+          <div className="queue-heading">
+            <h2 className="semibold">{t.queue}</h2>
             <span className="pill">{waiting.length} waiting</span>
           </div>
           <TicketList tickets={waiting} now={now} language={language} />
-          <div className="mt-8 border-t border-[var(--border)] pt-6">
-            <p className="eyebrow mb-4">TEAM AVAILABILITY</p>
+          <div className="other-windows">
+            <p className="eyebrow windows-label">TEAM AVAILABILITY</p>
             {data.windows.map((w) => (
-              <div
-                className="flex items-center justify-between py-3"
-                key={w.id}
-              >
-                <span className="text-sm">Window {w.id}</span>
+              <div className="other-window" key={w.id}>
+                <span className="small-text">Window {w.id}</span>
                 <Status status={w.status} />
               </div>
             ))}

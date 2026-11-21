@@ -15,37 +15,33 @@ export function TicketList({
   return tickets.length ? (
     <div>
       {tickets.slice(0, 20).map((t, i) => (
-        <div className="border-b border-[var(--border)] py-4" key={t.id}>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <span className="muted text-xs">
-                {String(i + 1).padStart(2, "0")}
-              </span>
+        <div className="list-row" key={t.id}>
+          <div className="queue-row">
+            <div className="queue-ticket">
+              <span className="caption">{String(i + 1).padStart(2, "0")}</span>
               <div>
-                <p className="text-xl font-bold">{t.number}</p>
-                <p className="muted mt-1 text-xs">{t.queueDate}</p>
+                <p className="queue-number">{t.number}</p>
+                <p className="queue-date">{t.queueDate}</p>
               </div>
             </div>
-            <span className="muted flex items-center gap-2 text-xs">
+            <span className="queue-wait">
               <Clock3 size={13} />
               {elapsed(t.createdAt, now)}
             </span>
           </div>
-          <div className="mt-3">
+          <div className="queue-issues">
             <IssueBadges issues={t.issues} language={language} />
           </div>
         </div>
       ))}
       {tickets.length > 20 && (
-        <p className="muted mt-4 text-xs">
-          + {tickets.length - 20} more waiting
-        </p>
+        <p className="queue-more">+ {tickets.length - 20} more waiting</p>
       )}
     </div>
   ) : (
-    <div className="py-12 text-center">
-      <Check className="mx-auto mb-4 text-emerald-500" />
-      <p className="muted text-sm">No visitors waiting</p>
+    <div className="current-service">
+      <Check className="queue-empty-icon" />
+      <p className="small-note">No visitors waiting</p>
     </div>
   );
 }

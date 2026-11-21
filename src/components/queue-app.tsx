@@ -1,5 +1,3 @@
-"use client";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Headset, Moon, Sun, Wifi } from "lucide-react";
 import { Button } from "./ui/button";
@@ -94,47 +92,45 @@ export function QueueApp({
     setVoice(true);
   }
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-[var(--border)] bg-[var(--panel)]">
-        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-7 py-5">
-          <Link href="/kiosk" className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+    <div className="app">
+      <header className="app-header">
+        <div className="header-inner">
+          <a href="/kiosk" className="header-group">
+            <span className="brand-icon">
               <Headset size={23} />
             </span>
-            <span className="text-xl font-bold tracking-tight">
-              Desk<span className="text-blue-500">Flow</span>
-              <span className="muted ml-3 text-xs font-normal">
-                IT SERVICE DESK
-              </span>
+            <span className="brand-title">
+              Desk<span className="accent">Flow</span>
+              <span className="brand-caption">IT SERVICE DESK</span>
             </span>
-          </Link>
-          <nav className="desktop-nav flex gap-2">
-            <Link
+          </a>
+          <nav className="desktop-nav">
+            <a
               className={`nav-link ${page === "kiosk" ? "active" : ""}`}
               href="/kiosk"
             >
               Ticket kiosk
-            </Link>
-            <Link
+            </a>
+            <a
               className={`nav-link ${page === "operator" ? "active" : ""}`}
               href="/operator/1"
             >
               Operator workspace
-            </Link>
-            <Link
+            </a>
+            <a
               className={`nav-link ${page === "display" ? "active" : ""}`}
               href="/display"
             >
               Live display
-            </Link>
-            <Link
+            </a>
+            <a
               className={`nav-link ${page === "admin" ? "active" : ""}`}
               href="/admin"
             >
               Overview
-            </Link>
+            </a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="header-group">
             <select
               aria-label="Language"
               value={language}
@@ -160,7 +156,7 @@ export function QueueApp({
         </div>
       </header>
       <main className="shell">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="page-meta">
           <span className="eyebrow">
             WORKPLACE TECHNOLOGY /{" "}
             {page === "operator"
@@ -172,17 +168,14 @@ export function QueueApp({
                   : "WELCOME"}
           </span>
           <span
-            className={`flex items-center gap-2 text-xs ${connected ? "text-emerald-600" : "text-amber-600"}`}
+            className={`connection ${connected ? "connected" : "disconnected"}`}
           >
             <Wifi size={14} />
             {connected ? t.connected : t.disconnected}
           </span>
         </div>
         {(notice || error) && (
-          <div
-            role="alert"
-            className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900"
-          >
+          <div role="alert" className="notice">
             {notice || error}
           </div>
         )}
@@ -216,7 +209,7 @@ export function QueueApp({
         {data && page === "admin" && (
           <AdminView data={data} language={language} />
         )}
-        <footer className="muted mt-10 flex justify-between border-t border-[var(--border)] pt-6 text-xs">
+        <footer className="footer">
           <span>DeskFlow · Workplace support, made simple.</span>
           <span>Local service desk</span>
         </footer>

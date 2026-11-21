@@ -1,7 +1,5 @@
-"use client";
 import type { Snapshot } from "@/types/queue";
 import { type Language } from "@/i18n";
-import Link from "next/link";
 import { Monitor } from "lucide-react";
 import { time, Status } from "@/components/shared/queue-format";
 import { IssueBadges } from "@/components/shared/issue-badges";
@@ -18,11 +16,11 @@ export function AdminView({
   const today = data.tickets.filter((t) => t.queueDate === data.date);
   return (
     <>
-      <h1 className="text-3xl font-bold">Service desk overview</h1>
-      <p className="muted mb-8 mt-2">
+      <h1 className="page-title">Service desk overview</h1>
+      <p className="page-subtitle">
         {data.date} · Live operations and today’s activity
       </p>
-      <div className="mb-6 grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div className="stats-grid">
         {[
           ["Tickets today", today.length],
           [
@@ -36,32 +34,30 @@ export function AdminView({
           ],
         ].map(([label, value]) => (
           <div className="panel" key={label}>
-            <p className="muted text-sm">{label}</p>
-            <p className="mt-3 text-4xl font-bold">{value}</p>
+            <p className="small-note">{label}</p>
+            <p className="stat-value">{value}</p>
           </div>
         ))}
       </div>
-      <div className="mb-6 grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div className="stats-grid">
         {data.windows.map((w) => (
-          <Link href={`/operator/${w.id}`} className="panel" key={w.id}>
-            <div className="mb-4 flex justify-between">
+          <a href={`/operator/${w.id}`} className="panel" key={w.id}>
+            <div className="window-heading">
               <strong>{w.name}</strong>
               <Monitor size={18} />
             </div>
             <Status status={w.status} />
-            <p className="mt-5 text-3xl font-bold">
+            <p className="window-number">
               {data.tickets.find((t) => t.id === w.currentTicketId)?.number ??
                 "—"}
             </p>
-            <p className="muted mt-2 text-xs">{w.allocationMode}</p>
-          </Link>
+            <p className="window-caption">{w.allocationMode}</p>
+          </a>
         ))}
       </div>
       <div className="grid-main">
-        <section className="panel overflow-x-auto">
-          <h2 className="mb-5 font-semibold">
-            Tickets · today & active carryovers
-          </h2>
+        <section className="panel table-panel">
+          <h2 className="section-title">Tickets · today</h2>
           <table>
             <thead>
               <tr>
@@ -76,8 +72,8 @@ export function AdminView({
             <tbody>
               {data.tickets.map((t) => (
                 <tr key={t.id}>
-                  <td className="font-bold">{t.number}</td>
-                  <td className="min-w-64">
+                  <td className="bold">{t.number}</td>
+                  <td className="issue-cell">
                     <IssueBadges issues={t.issues} language={language} />
                   </td>
                   <td>{t.queueDate}</td>
@@ -89,20 +85,20 @@ export function AdminView({
             </tbody>
           </table>
           {!data.tickets.length && (
-            <p className="muted py-5">No tickets yet today.</p>
+            <p className="empty-message">No tickets yet today.</p>
           )}
         </section>
         <section className="panel">
-          <h2 className="mb-5 font-semibold">
-            Activity log <span className="muted text-xs">Latest 100</span>
+          <h2 className="section-title">
+            Activity log <span className="caption">Latest 100</span>
           </h2>
-          <div className="max-h-[650px] overflow-y-auto">
+          <div className="event-list">
             {data.events.map((e) => (
-              <div className="border-b border-[var(--border)] py-4" key={e.id}>
-                <p className="text-sm font-medium">
+              <div className="list-row" key={e.id}>
+                <p className="event-title">
                   {e.type} {e.windowId ? `· Window ${e.windowId}` : ""}
                 </p>
-                <p className="muted mt-2 break-all text-xs">
+                <p className="event-detail">
                   {time(e.createdAt)} · {e.payload}
                 </p>
               </div>
