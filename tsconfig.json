@@ -11,19 +11,23 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/*": ["./src/*"]
     },
+    "allowJs": true,
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "server.ts",
-    "scripts/**/*.ts",
-    "tests/**/*.ts",
-    "vite.config.ts",
-    "vitest.config.ts"
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "src/generated"]
+  "exclude": ["node_modules"]
 }

@@ -1,5 +1,5 @@
 import type { Server } from "socket.io";
-import type { QueueEvent } from "../types/queue";
+import type { QueueEvent } from "../generated/prisma/client";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -8,9 +8,9 @@ export type QueueSocketServer = Server<
   ClientToServerEvents,
   ServerToClientEvents
 >;
-let socketServer: QueueSocketServer | undefined;
+const shared = globalThis as unknown as { queueIo?: QueueSocketServer };
 export function setSocketServer(io: QueueSocketServer) {
-  socketServer = io;
+  shared.queueIo = io;
 }
 export function publish(events: QueueEvent[]) {
   for (const event of events) {
@@ -18,10 +18,10 @@ export function publish(events: QueueEvent[]) {
       keyof ServerToClientEvents,
       "queue:updated"
     >;
-    socketServer?.emit(name, {
+    shared.queueIo?.emit(name, {
       ...event,
-      createdAt: event.createdAt,
+      createdAt: event.createdAt.toISOString(),
     });
   }
-  socketServer?.emit("queue:updated", { id: crypto.randomUUID() });
+  shared.queueIo?.emit("queue:updated", { id: crypto.randomUUID() });
 }

@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum TicketStatus {
+  WAITING
+  CALLED
+  SERVING
+  COMPLETED
+  NO_SHOW
+}
+
+enum WindowStatus {
+  OFFLINE
+  IDLE
+  READY
+  CALLING
+  BUSY
+  PAUSED
+}
+
+enum AllocationMode {
+  MANUAL
+  AUTO
+}
+
+// 一个model是一个数据库的表
+model Ticket {
+  //字段名称  字段类型  属性
+  id          String       @id @default(cuid()) //CUID 是一种用于生成唯一标识符的算法。
+  number      String
+  queueDate   String
+  sequence    Int
+  status      TicketStatus @default(WAITING) //表示创建号码时，如果没有指定 status，默认使用 WAITING。
+  windowId    Int?
+  createdAt   DateTime     @default(now())
+  calledAt    DateTime? //? 表示这个字段可以为 null。
+  startedAt   DateTime?
+  completedAt DateTime?
+  issues      Json         @default("[]") // 两级需求代码列表；历史号码保留空列表。
+
+  @@unique([queueDate, sequence])
+  /**
+   * 双 @@ 表示模型级属性。它创建一个联合唯一约束（Composite Unique Constraint）
+   * 两个属性不能完全相同。queueDate 和 sequence 的组合必须是唯一的。
+   * 例如：
+   * queueDate	sequence	是否允许
+   * 2026-10-27	1	允许
+   * 2026-10-27	2	允许
+   * 2026-10-27	1	不允许，重复
+   * 2026-10-28	1	允许
+   * 数据库会强制检查这个约束。 即使两个取号请求同时到达，也不能成功插入相同日期和序号的两条记录。
+   */
+  @@index([status, createdAt]) //建立数据库索引。
+}
+
+model ServiceWindow {
+  id              Int            @id
+  name            String
+  status          WindowStatus   @default(OFFLINE)
+  allocationMode  AllocationMode @default(MANUAL)
+  readyAt         DateTime?
+  currentTicketId String?        @unique
+}
+
+model QueueEvent {
+  id        String   @id @default(cuid())
+  ticketId  String?
+  windowId  Int?
+  type      String
+  payload   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+  /**
+   * Prisma 在更新记录时，自动将这个字段设置为当前时间。
+   * 属性	创建记录时	更新记录时
+   * @default(now())	自动设置当前时间	不自动变化
+   * @updatedAt	自动设置当前时间	自动更新为当前时间
+   * 例如：
+   * 操作	createdAt	updatedAt
+   * 创建记录	10:00	10:00
+   * 第一次更新	10:00	10:15
+   * 第二次更新	10:00	11:30
+   * 因此，createdAt 用于记录创建时间，updatedAt 用于记录最后修改时间。
+   */
+}
