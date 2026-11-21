@@ -19,7 +19,7 @@ npm run build
 npm run start
 ```
 
-也可以双击 **start-server.bat**。脚本切换到项目目录、检查 Node、首次复制配置、按需安装依赖、迁移并初始化窗口、缺少生产构建时执行构建，最后启动生产服务。修改源代码后请手动重新 `npm run build`。启动过程失败会返回非零退出码。保持命令窗口运行；Ctrl+C 停止服务器。
+也可以双击 **start-server.bat**。脚本切换到项目目录、检查 Node、首次复制配置、按需安装依赖、迁移并初始化窗口、缺少生产构建时执行构建，最后启动生产服务。修改源代码后请手动重新 `npm run build`。启动失败会显示错误并暂停窗口，返回非零退出码；自动化运行可设置 DESKFLOW_NO_PAUSE=1 跳过暂停。端口占用通常表示已有服务运行，应先停止旧实例，避免重复启动。保持命令窗口运行；Ctrl+C 停止服务器。
 
 `npm run dev` 和 `npm run start` 均启动自定义 `server.ts`，同一 HTTP 服务提供 Next.js 和 Socket.IO。不要改用 `next start`，它不会挂载本项目的 Socket.IO 服务。
 

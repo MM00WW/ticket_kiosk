@@ -17,9 +17,7 @@ export interface Ticket {
 export interface ServiceWindow {
   id: number;
   name: string;
-  status: "OFFLINE" | "IDLE" | "READY" | "CALLING" | "BUSY" | "PAUSED";
-  allocationMode: "MANUAL" | "AUTO";
-  readyAt: string | null;
+  status: "OFFLINE" | "IDLE" | "CALLING" | "BUSY" | "PAUSED" | "ONLINE_WORK";
   currentTicketId: string | null;
 }
 export interface QueueEvent {
@@ -30,18 +28,11 @@ export interface QueueEvent {
   payload: string;
   createdAt: string;
 }
-export interface SystemSetting {
-  key: string;
-  value: string;
-  updatedAt: string;
-}
 export interface Snapshot {
   tickets: Ticket[];
   windows: ServiceWindow[];
   events: QueueEvent[];
-  settings: SystemSetting[];
   date: string;
-  serverTime: string;
 }
 
 export interface ServerToClientEvents {

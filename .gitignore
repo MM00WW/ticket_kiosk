@@ -5,3 +5,4 @@ data/*.db*
 src/generated/
 *.tsbuildinfo
 test-results/
+data/*.log

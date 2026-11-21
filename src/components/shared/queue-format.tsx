@@ -14,7 +14,9 @@ export function Status({ status }: { status: string }) {
   return (
     <span className={`pill status-${status}`}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
-      {status.replaceAll("_", " ")}
+      {status === "ONLINE_WORK"
+        ? "Online tickets"
+        : status.replaceAll("_", " ")}
     </span>
   );
 }

@@ -14,6 +14,7 @@ const env = {
   ...process.env,
   DATABASE_URL: "file:./data/production-test.db",
   PORT: String(port),
+  DESKFLOW_NO_PAUSE: "1",
 };
 mkdirSync("data", { recursive: true });
 closeSync(openSync("data/production-test.db", "a"));
@@ -114,6 +115,17 @@ try {
   const connect = nextEvent("connect");
   socket.connect();
   await connect;
+  // 线上工单期间不能手工叫号，取号本身也不会分配窗口。
+  assert.equal((await post("/api/windows/3/online-work")).status, 409);
+  await post("/api/windows/3/online");
+  const workUpdated = nextEvent("window:updated");
+  assert.equal((await post("/api/windows/3/online-work")).status, 200);
+  assert.equal(((await workUpdated) as { windowId: number }).windowId, 3);
+  const working = (await snapshot()).windows[2];
+  assert.equal(working.status, "ONLINE_WORK");
+  assert.equal(working.currentTicketId, null);
+  for (const action of ["call-next", "start", "complete", "online-work"])
+    assert.equal((await post(`/api/windows/3/${action}`)).status, 409);
   for (let i = 1; i <= 3; i++) {
     const created = nextEvent("ticket:created");
     const legacyResponse =
@@ -155,10 +167,19 @@ try {
     ).status,
     400,
   );
+  assert.equal(
+    (await snapshot()).tickets.filter(
+      (t: { status: string }) => t.status === "WAITING",
+    ).length,
+    3,
+  );
   await post("/api/windows/1/online");
-  await post("/api/windows/1/mode", { mode: "AUTO" });
+  assert.equal((await post("/api/windows/1/online-work")).status, 200);
+  assert.equal((await post("/api/windows/1/finish-online-work")).status, 200);
+  assert.equal((await snapshot()).windows[0].status, "IDLE");
+  assert.equal((await post("/api/windows/1/finish-online-work")).status, 409);
   const called = nextEvent("ticket:called");
-  await post("/api/windows/1/ready");
+  await post("/api/windows/1/call-next");
   const call = (await called) as { id: string; payload: string };
   assert.equal(JSON.parse(call.payload).number, "A001");
   assert.deepEqual(
@@ -172,7 +193,9 @@ try {
   assert.notEqual(((await recalled) as { id: string }).id, call.id);
   await post("/api/windows/2/online");
   await post("/api/windows/2/call-next");
+  assert.equal((await post("/api/windows/1/online-work")).status, 409);
   await post("/api/windows/1/start");
+  assert.equal((await post("/api/windows/1/online-work")).status, 409);
   const completed = nextEvent("ticket:completed");
   await post("/api/windows/1/complete");
   await completed;
@@ -182,7 +205,7 @@ try {
     state.tickets.find((t: { number: string }) => t.number === "A003").status,
     "WAITING",
   );
-  await post("/api/windows/1/ready");
+  await post("/api/windows/1/call-next");
   state = await snapshot();
   assert.equal(
     state.tickets.find((t: { number: string }) => t.number === "A003").windowId,
@@ -194,10 +217,8 @@ try {
     defaultIssues,
   );
   assert.equal((await post("/api/windows/1/offline")).status, 409);
-  assert.equal(
-    (await post("/api/windows/1/mode", { mode: "INVALID" })).status,
-    400,
-  );
+  for (const action of ["mode", "ready", "cancel-ready"])
+    assert.equal((await post(`/api/windows/1/${action}`)).status, 400);
   assert.equal((await post("/api/windows/9/online")).status, 400);
   // 强制断开底层连接后自动重连；connect 时重新 GET 权威完整状态。
   let recovered: Promise<unknown> | undefined;
@@ -227,8 +248,38 @@ try {
       .issues,
     selectedIssues,
   );
+  assert.equal(state.windows[2].status, "ONLINE_WORK");
+  assert.equal((await post("/api/windows/3/finish-online-work")).status, 200);
+  assert.equal((await snapshot()).windows[2].status, "IDLE");
+  // 空闲窗口不会因为新增号码而自动接单。
+  await post("/api/windows/4/online");
+  assert.equal((await snapshot()).windows[2].currentTicketId, null);
+  // 并发取号与并发叫号仍不能重复编号或重复分配。
+  const createdTogether = await Promise.all([
+    post("/api/tickets"),
+    post("/api/tickets"),
+  ]);
+  assert.ok(createdTogether.every((r) => r.status === 201));
+  assert.notEqual(
+    createdTogether[0].data.number,
+    createdTogether[1].data.number,
+  );
+  const beforeCalling = await snapshot();
+  assert.equal(beforeCalling.windows[2].status, "IDLE");
+  assert.equal(beforeCalling.windows[3].status, "IDLE");
+  assert.equal(beforeCalling.windows[2].currentTicketId, null);
+  assert.equal(beforeCalling.windows[3].currentTicketId, null);
+  const allocatedTogether = await Promise.all([
+    post("/api/windows/3/call-next"),
+    post("/api/windows/4/call-next"),
+  ]);
+  assert.ok(allocatedTogether.every((r) => r.status === 200));
+  assert.notEqual(
+    allocatedTogether[0].data.currentTicketId,
+    allocatedTogether[1].data.currentTicketId,
+  );
   console.log(
-    "PASS: 7 production pages, acceptance flow, issue persistence + validation + legacy API, typed socket broadcasts, recall event IDs, automatic reconnect + issue recovery, persistence after restart.",
+    "PASS: 7 production pages, acceptance flow, issue persistence + validation + legacy API, typed socket broadcasts, recall event IDs, automatic reconnect + issue recovery, persistence after restart, online work transitions + allocation exclusion + restart recovery, concurrent allocation.",
   );
 } finally {
   socket.disconnect();

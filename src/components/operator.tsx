@@ -2,7 +2,7 @@
 import type { Snapshot } from "@/types/queue";
 import { messages, type Language } from "@/i18n";
 import Link from "next/link";
-import { BellRing, Check, Monitor, Users, LayoutDashboard } from "lucide-react";
+import { BellRing, Check, Monitor, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { request } from "@/hooks/useQueue";
 import type { WindowAction } from "@/server/queueService";
@@ -14,21 +14,12 @@ const actions: {
   action: WindowAction;
   label: string;
   states: string[];
-  mode?: string;
 }[] = [
   { action: "online", label: "Go online", states: ["OFFLINE"] },
-  {
-    action: "ready",
-    label: "Ready to receive",
-    states: ["IDLE"],
-    mode: "AUTO",
-  },
-  { action: "cancel-ready", label: "Cancel ready", states: ["READY"] },
   {
     action: "call-next",
     label: "Call next ticket",
     states: ["IDLE"],
-    mode: "MANUAL",
   },
   { action: "recall", label: "Call again", states: ["CALLING"] },
   { action: "start", label: "Start service", states: ["CALLING"] },
@@ -62,6 +53,7 @@ export function OperatorView({
     (t) => t.id === currentWindow?.currentTicketId,
   );
   if (!currentWindow) return null;
+  const onlineWork = currentWindow.status === "ONLINE_WORK";
   return (
     <>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
@@ -83,7 +75,7 @@ export function OperatorView({
           ))}
         </div>
       </div>
-      <div className="mb-6 grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-5 lg:grid-cols-3">
         {[
           { label: "Your window", value: `0${windowId}`, icon: Monitor },
           {
@@ -97,11 +89,6 @@ export function OperatorView({
               (t) => t.windowId === windowId && t.status === "COMPLETED",
             ).length,
             icon: Check,
-          },
-          {
-            label: "Allocation mode",
-            value: currentWindow.allocationMode,
-            icon: LayoutDashboard,
           },
         ].map((item) => (
           <div
@@ -125,7 +112,11 @@ export function OperatorView({
             </div>
             <div className="py-12 text-center">
               <p className="eyebrow">
-                {current ? "CURRENT TICKET" : "READY WHEN YOU ARE"}
+                {onlineWork
+                  ? t.onlineWorkStatus
+                  : current
+                    ? "CURRENT TICKET"
+                    : "READY WHEN YOU ARE"}
               </p>
               <div className="number my-5 text-8xl font-bold">
                 {current?.number ?? "—"}
@@ -133,7 +124,9 @@ export function OperatorView({
               <p className="muted text-sm">
                 {current
                   ? `Issued ${time(current.createdAt)} · ${current.queueDate}`
-                  : "Go online and call your next visitor."}
+                  : onlineWork
+                    ? t.onlineWorkHint
+                    : "Go online and call your next visitor."}
               </p>
               {current && (
                 <div className="mx-auto mt-6 max-w-2xl text-left">
@@ -167,42 +160,35 @@ export function OperatorView({
           <section className="panel">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold">Window controls</h2>
-              <select
-                aria-label="Allocation mode"
-                value={currentWindow.allocationMode}
-                disabled={busy}
-                onChange={(e) =>
+            </div>
+            <div className="action-grid">
+              <Button
+                variant={onlineWork ? "default" : "outline"}
+                disabled={
+                  busy || (!onlineWork && currentWindow.status !== "IDLE")
+                }
+                onClick={() =>
                   void run(() =>
-                    request(`/api/windows/${windowId}/mode`, {
-                      mode: e.target.value,
-                    }),
+                    request(
+                      `/api/windows/${windowId}/${onlineWork ? "finish-online-work" : "online-work"}`,
+                      {},
+                    ),
                   )
                 }
               >
-                <option value="MANUAL">Manual allocation</option>
-                <option value="AUTO">Automatic allocation</option>
-              </select>
-            </div>
-            <div className="action-grid">
+                {onlineWork ? t.finishOnlineWork : t.onlineWork}
+              </Button>
               {actions.map((a) => (
                 <Button
                   key={a.action}
                   variant={
-                    [
-                      "call-next",
-                      "ready",
-                      "start",
-                      "complete",
-                      "online",
-                    ].includes(a.action)
+                    ["call-next", "start", "complete", "online"].includes(
+                      a.action,
+                    )
                       ? "default"
                       : "outline"
                   }
-                  disabled={
-                    busy ||
-                    !a.states.includes(currentWindow.status) ||
-                    !!(a.mode && a.mode !== currentWindow.allocationMode)
-                  }
+                  disabled={busy || !a.states.includes(currentWindow.status)}
                   onClick={() =>
                     void run(() =>
                       request(`/api/windows/${windowId}/${a.action}`, {}),
@@ -214,7 +200,8 @@ export function OperatorView({
               ))}
             </div>
             <p className="muted mt-5 text-xs">
-              Automatic mode requires “Ready to receive” for each new visitor.
+              Click “Call next ticket” to assign the next waiting visitor to
+              your window.
             </p>
           </section>
         </div>

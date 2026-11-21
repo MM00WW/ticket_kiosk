@@ -21,6 +21,16 @@ setSocketServer(io);
 io.on("connection", (socket) =>
   socket.emit("queue:updated", { id: crypto.randomUUID() }),
 );
+server.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(
+      `Port ${port} is already in use. DeskFlow may already be running at http://localhost:${port}/kiosk. Stop the existing server before starting again.`,
+    );
+  } else {
+    console.error("DeskFlow could not start:", error);
+  }
+  process.exit(1);
+});
 server.listen(port, "0.0.0.0", () =>
   console.log(`Service Desk: http://localhost:${port}`),
 );

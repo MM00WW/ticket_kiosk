@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Headset, Moon, Sun, Wifi } from "lucide-react";
-import { Button } from "./ui/button";
+import { Headset, Wifi } from "lucide-react";
 import { useQueue } from "@/hooks/useQueue";
 import { messages, speechTemplates, type Language } from "@/i18n";
 import type { QueueEvent } from "@/types/queue";
@@ -20,7 +19,6 @@ export function QueueApp({
   windowId?: number;
 }) {
   const [language, setLanguage] = useState<Language>("en");
-  const [dark, setDark] = useState(false);
   const [voice, setVoice] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -50,6 +48,7 @@ export function QueueApp({
   };
   const { data, connected, error, refresh } = useQueue(announcement);
   const t = messages[language];
+  const staffNavigation = page === "admin" || page === "operator";
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -70,11 +69,6 @@ export function QueueApp({
     } finally {
       setBusy(false);
     }
-  }
-  function toggleTheme() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
   }
   function enableVoice() {
     if (!("speechSynthesis" in window)) {
@@ -108,31 +102,38 @@ export function QueueApp({
               </span>
             </span>
           </Link>
-          <nav className="desktop-nav flex gap-2">
+          <nav
+            aria-label="Main navigation"
+            className={`${staffNavigation ? "desktop-nav " : ""}flex gap-2`}
+          >
             <Link
               className={`nav-link ${page === "kiosk" ? "active" : ""}`}
               href="/kiosk"
             >
               Ticket kiosk
             </Link>
-            <Link
-              className={`nav-link ${page === "operator" ? "active" : ""}`}
-              href="/operator/1"
-            >
-              Operator workspace
-            </Link>
+            {staffNavigation && (
+              <Link
+                className={`nav-link ${page === "operator" ? "active" : ""}`}
+                href="/operator/1"
+              >
+                Operator workspace
+              </Link>
+            )}
             <Link
               className={`nav-link ${page === "display" ? "active" : ""}`}
               href="/display"
             >
               Live display
             </Link>
-            <Link
-              className={`nav-link ${page === "admin" ? "active" : ""}`}
-              href="/admin"
-            >
-              Overview
-            </Link>
+            {staffNavigation && (
+              <Link
+                className={`nav-link ${page === "admin" ? "active" : ""}`}
+                href="/admin"
+              >
+                Overview
+              </Link>
+            )}
           </nav>
           <div className="flex items-center gap-3">
             <select
@@ -148,14 +149,6 @@ export function QueueApp({
               <option value="zh">中文</option>
               <option value="de">DE</option>
             </select>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Toggle dark mode"
-              onClick={toggleTheme}
-            >
-              {dark ? <Sun size={17} /> : <Moon size={17} />}
-            </Button>
           </div>
         </div>
       </header>

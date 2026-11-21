@@ -1,5 +1,10 @@
 export const messages = {
   en: {
+    onlineWork: "Handle online tickets",
+    finishOnlineWork: "Finish online work",
+    onlineWorkStatus: "Handling online tickets",
+    onlineWorkHint:
+      "On-site calls are paused. Finish online work to return to idle.",
     welcome: "How can we help?",
     intro:
       "Your IT team is ready to help. Take a ticket and we’ll call you to an available service window.",
@@ -18,6 +23,10 @@ export const messages = {
     disconnected: "Reconnecting…",
   },
   zh: {
+    onlineWork: "处理线上工单",
+    finishOnlineWork: "完成线上工单",
+    onlineWorkStatus: "正在处理线上工单",
+    onlineWorkHint: "已暂停现场接单，完成线上工单后恢复空闲。",
     welcome: "有什么可以帮您？",
     intro: "欢迎来到 IT 服务台。请取号，并等待叫号前往服务窗口。",
     take: "取号",
@@ -35,6 +44,11 @@ export const messages = {
     disconnected: "正在重新连接…",
   },
   de: {
+    onlineWork: "Online-Tickets bearbeiten",
+    finishOnlineWork: "Online-Arbeit abschließen",
+    onlineWorkStatus: "Online-Tickets in Bearbeitung",
+    onlineWorkHint:
+      "Vor-Ort-Aufrufe pausieren. Nach Abschluss ist der Schalter wieder frei.",
     welcome: "Wie können wir helfen?",
     intro:
       "Ihr IT-Team hilft Ihnen gerne. Ziehen Sie eine Nummer und warten Sie auf Ihren Aufruf.",

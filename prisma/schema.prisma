@@ -18,15 +18,10 @@ enum TicketStatus {
 enum WindowStatus {
   OFFLINE
   IDLE
-  READY
   CALLING
   BUSY
   PAUSED
-}
-
-enum AllocationMode {
-  MANUAL
-  AUTO
+  ONLINE_WORK
 }
 
 // 一个model是一个数据库的表
@@ -63,8 +58,6 @@ model ServiceWindow {
   id              Int            @id
   name            String
   status          WindowStatus   @default(OFFLINE)
-  allocationMode  AllocationMode @default(MANUAL)
-  readyAt         DateTime?
   currentTicketId String?        @unique
 }
 

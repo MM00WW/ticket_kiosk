@@ -53,7 +53,6 @@ export function AdminView({
               {data.tickets.find((t) => t.id === w.currentTicketId)?.number ??
                 "—"}
             </p>
-            <p className="muted mt-2 text-xs">{w.allocationMode}</p>
           </Link>
         ))}
       </div>

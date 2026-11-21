@@ -8,15 +8,7 @@
   --border: #e2e8f0;
   color-scheme: light;
 }
-html.dark {
-  --bg: #0e1626;
-  --panel: #172237;
-  --soft: #202e46;
-  --ink: #edf4ff;
-  --muted: #9baac1;
-  --border: #2a3952;
-  color-scheme: dark;
-}
+
 * {
   box-sizing: border-box;
 }
@@ -74,14 +66,14 @@ button {
   font-size: 11px;
   font-weight: 700;
 }
-.status-IDLE,
-.status-READY {
+.status-IDLE {
   color: #159570;
 }
 .status-CALLING {
   color: #3478f5;
 }
-.status-BUSY {
+.status-BUSY,
+.status-ONLINE_WORK {
   color: #ad7a08;
 }
 .status-OFFLINE,

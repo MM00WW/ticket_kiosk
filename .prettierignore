@@ -6,3 +6,5 @@ package-lock.json
 next-env.d.ts
 *.code-workspace
 prisma/migrations
+
+dist
